@@ -1,0 +1,6 @@
+# Python 3.11, an NVIDIA GPU with CUDA 12. Optional: the CuPy change of docs/cupy_eigsh_patch.md.
+cupy-cuda12x==13.6.0
+numpy>=2.2
+scipy>=1.16
+pandas>=2.3,<4
+pyyaml>=6.0

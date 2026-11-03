@@ -1,0 +1,100 @@
+# Run configurations.
+#
+#   python main.py --solver <RUN_NAME> --dataset <DATASET> [--instance <FILE>]
+#
+# <RUN_NAME> is a key below. Its `solver_name` selects the class in utils/selector.py, its
+# `params` are passed to the solver's constructor, and the key names the results folder:
+# results/<DATASET>/<RUN_NAME>/.
+#
+# Seeds run as random_seed + i, i = 0 ... num_seeds - 1 (--num-seeds and --seed override them).
+
+random_seed: 42
+num_seeds: 10
+
+# Also write the best spin configuration of each run to results/<dataset>/<run>/solutions/*.sol
+# (--save-spins / --no-save-spins override).
+save_spins: false
+
+# `warmup: true` (a pipeline key, not passed to the solver): before the first timed instance, the
+# process solves a small synthetic instance that is not recorded, so one-time GPU initialization is
+# not charged to it.
+
+
+# ---------------------------------------------------------------------------
+# SpecAnn (Algorithm 1 of the paper). K_alpha = 128 square-root-spaced values of alpha in [0, 1]
+# (mode 0), predictor tolerance tau_pred = 1e-3, shift eps_rho = 1e-3, eigsh tolerance 1e-6 and
+# at most 1000 iterations; batched GPU local search. precision 32: single precision on the GPU,
+# with the reported energy recomputed exactly in double precision.
+# ---------------------------------------------------------------------------
+
+SpecAnn:
+  solver_name: "spectral_annealing"
+  params: &specann_params
+    warmup: true
+    mode: 0
+    use_local_search: true
+    max_local_iterations: 1000
+    eigsh_tol: 1e-6
+    eigsh_maxiter: 1000
+    precision: 32
+    pred_mode: "diagonal"
+    pred_tol: 1e-3
+    shift_eps: 1e-3
+
+# Double precision (SpecAnn[64]).
+SpecAnn-64:
+  solver_name: "spectral_annealing"
+  params: {<<: *specann_params, precision: 64}
+
+# Without the local search (SpecAnn[-LS]).
+SpecAnn-LS:
+  solver_name: "spectral_annealing"
+  params: {<<: *specann_params, use_local_search: false}
+
+# Without the warm start: a random initial vector at every alpha (SpecAnn[-WS]).
+SpecAnn-cold:
+  solver_name: "spectral_annealing"
+  params: {<<: *specann_params, disable_warm_start: true}
+
+# Secant predictor instead of the diagonal one (SpecAnn[Sec]).
+SpecAnn-sec:
+  solver_name: "spectral_annealing"
+  params: {<<: *specann_params, pred_mode: "secant"}
+
+# Guarded local search (Adaptive Guard): an energy guard on the GPU local search. Also
+# "fixed_guard" and "independent_set" (models/local_search_guards).
+SpecAnn-guard-adaptive:
+  solver_name: "spectral_annealing"
+  params: {<<: *specann_params, ls_policy: "adaptive_guard"}
+
+# The alpha schedule: `schedule` ("sqrt", the default, or "linear"), `schedule_interval` (default
+# [0, 1]) and `num_alphas` (default 128) give K equally spaced values t of the interval, then
+# alpha = sqrt(t) or t. Example: square-root schedule on [0, 1.25] with 51 values.
+SpecAnn-sched-example:
+  solver_name: "spectral_annealing"
+  params: {<<: *specann_params, schedule: "sqrt", schedule_interval: [0, 1.25], num_alphas: 51}
+
+
+# ---------------------------------------------------------------------------
+# Fixed-normalization spectral baselines, the endpoints of SpecAnn's path, with the same
+# eigensolver and local search.
+# ---------------------------------------------------------------------------
+
+SpecAdj:                  # alpha = 0: principal eigenvector of the adjacency matrix
+  solver_name: "spec_adj"
+  params:
+    warmup: true
+    precision: 32
+    use_local_search: true
+    eigsh_tol: 1e-6
+    eigsh_maxiter: 1000
+
+SpecSignedLap:            # alpha = 1: normalized signed Laplacian
+  solver_name: "spec_signed_lap"
+  params:
+    warmup: true
+    precision: 32
+    mode: 1
+    use_local_search: true
+    eigsh_tol: 1e-6
+    eigsh_maxiter: 1000

@@ -1,0 +1,1 @@
+# Simple spectral solvers package
