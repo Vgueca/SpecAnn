@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/specann_overview.png" width="100%" alt="Overview of SpecAnn: (signed) Ising couplings, a path of normalized matrices, warm-started eigenvectors, rounded candidates, a GPU local search on all candidates at once, and the best spin vector; below, the alpha-sweep on a toy signed graph">
+  <img src="docs/specann_overview.svg" width="100%" alt="Overview of SpecAnn: (signed) Ising couplings, a path of normalized matrices, warm-started eigenvectors, rounded candidates, a GPU local search on all candidates at once, and the best spin vector; below, the alpha-sweep on a toy signed graph">
 </p>
 <p align="center"><sub><b>Overview of SpecAnn</b> (step 6 is schematic). Bottom: the α-sweep (steps 2–4) on a toy signed
 graph (n = 36) at four of the 128 values of α in the schedule.</sub></p>
